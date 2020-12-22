@@ -30,7 +30,7 @@ QQ: 16891544
 
 ![](https://gitee.com/ares5k/resources/raw/master/images/ares5k-delayed-promise-message/ares5k-delayed-promise-message.jpg)
 
-# ** 项目结构 **
+#  项目结构
 
 ```
 ├── delayed-promise-message 
