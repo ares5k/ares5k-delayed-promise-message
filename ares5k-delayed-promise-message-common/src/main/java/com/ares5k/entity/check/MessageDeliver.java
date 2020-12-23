@@ -20,11 +20,8 @@ public class MessageDeliver {
 
     /**
      * 消息状态：
-     * 0-发送中
-     * 1-MQ服务器签收成功
-     * 2-MQ服务器签收失败
-     * 3-消费端签收成功
-     * 4-消费端签收失败
+     * 0-消费端签收成功
+     * 1-消费端签收失败
      */
     private Integer msgStatus;
 
@@ -106,7 +103,7 @@ public class MessageDeliver {
      * 消息状态
      */
     public enum MessageStatus {
-        SEND, SERVER_OK, SERVER_FAIL, CONSUMER_OK, CONSUMER_FAIL
+        CONSUMER_OK, CONSUMER_FAIL
     }
 
 }

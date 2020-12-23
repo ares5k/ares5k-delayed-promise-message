@@ -66,14 +66,11 @@ public class PromiseMsgReturnCallback implements RabbitTemplate.ReturnCallback {
                 routingKey);
         try {
             //json转换
-            MsgData msgData = objectMapper.readValue(message.getBody(), MsgData.class);
+            BizProvider bizProvider = objectMapper.readValue(message.getBody(), MsgData.class).getBizProvider();
 
             //更新数据状态
             log.warn(RabbitLogConstant.SYNC_FIND_QUEUE_ERROR);
-            bizProviderMapper.updateById(
-                    new BizProvider()
-                            .setProviderId(msgData.getBizProvider().getProviderId())
-                            .setSyncStatus(BizProvider.SendSyncEnum.FIND_QUEUE_ERROR.ordinal()));
+            bizProviderMapper.updateById(bizProvider.setSyncStatus(BizProvider.SendSyncEnum.FIND_QUEUE_ERROR.ordinal()));
 
         } catch (IOException e) {
             log.error(RabbitLogConstant.JSON_ERROR, e);

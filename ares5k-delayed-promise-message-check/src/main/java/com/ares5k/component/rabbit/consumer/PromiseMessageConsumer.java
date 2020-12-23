@@ -92,7 +92,7 @@ public class PromiseMessageConsumer {
             queues = {QueueConstant.PROMISE_MESSAGE_CHECK_QUEUE_NAME},
             //指定监听容器工厂
             containerFactory = "promiseMsgListenerContainerFactory")
-    public void okHandler(Message message, Channel channel) throws IOException {
+    public void consumerHandleSuccess(Message message, Channel channel) throws IOException {
 
         //消息ID
         String correlationId = message.getMessageProperties()
@@ -110,7 +110,8 @@ public class PromiseMessageConsumer {
 
         try {
             //将消息状态保存至消息表
-            messageDeliverService.okHandle(correlationId, new String(message.getBody(), StandardCharsets.UTF_8));
+            messageDeliverService.consumerHandleSuccess(correlationId, new String(message.getBody(), StandardCharsets.UTF_8));
+            log.info(RabbitLogConstant.RABBIT_CONSUME_SUCCESS, correlationId);
         } finally {
             //此处使用手动 ack的目的仅仅是为了限流
             //哪怕消费失败了也不需要将消息重回队列, 既然消息

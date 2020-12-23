@@ -84,5 +84,4 @@ public class BizProvider {
     public enum SendSyncEnum {
         SUCCESS, FIND_EXCHANGE_ERROR, FIND_QUEUE_ERROR
     }
-
 }

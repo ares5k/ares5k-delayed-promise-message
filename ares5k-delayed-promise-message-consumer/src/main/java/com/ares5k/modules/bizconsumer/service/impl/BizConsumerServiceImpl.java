@@ -5,6 +5,7 @@ import com.ares5k.modules.bizconsumer.mapper.BizConsumerMapper;
 import com.ares5k.modules.bizconsumer.service.BizConsumerService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -27,6 +28,7 @@ public class BizConsumerServiceImpl extends ServiceImpl<BizConsumerMapper, BizCo
      * @author arese5k
      */
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public void saveBizConsumer(BizConsumer consumer) {
         //不存在新增
         if (ObjectUtils.isEmpty(super.getById(consumer.getProviderId()))) {
@@ -44,6 +46,7 @@ public class BizConsumerServiceImpl extends ServiceImpl<BizConsumerMapper, BizCo
      * @author arese5k
      */
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public void delBizConsumer(BizConsumer consumer) {
         super.removeById(consumer.getProviderId());
     }

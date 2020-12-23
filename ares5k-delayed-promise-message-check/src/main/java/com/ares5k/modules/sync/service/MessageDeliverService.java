@@ -19,18 +19,16 @@ public interface MessageDeliverService {
      *
      * @param id   消息ID
      * @param data 数据
-     * @return 操作结果
      * @author ares5k
      */
-    boolean okHandle(String id, String data);
+    void consumerHandleSuccess(String id, String data);
 
     /**
      * 验证是否成功同步
      *
      * @param id   消息ID
      * @param data 数据
-     * @return 操作结果
      * @author ares5k
      */
-    boolean delayCheckHandle(String id, String data) throws IOException;
+    void delayCheckHandle(String id, String data) throws IOException;
 }

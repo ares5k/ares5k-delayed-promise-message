@@ -94,29 +94,23 @@ public class PromiseMessageConsumer {
                 log.warn(RabbitLogConstant.REDIS_PROCESSED, correlationId);
                 return;
             }
-            try {
-                //业务处理结果判断
-                if (!bizProcess(message)) {
-                    //业务处理失败, 删除幂等性标识
-                    redisTemplate.delete("rabbit:unique:" + correlationId);
-                } else {
-                    //业务处理成功
-                    //发送到检查交换机
-                    log.info(RabbitLogConstant.SEND_TO_CHECK_EXCHANGE, correlationId);
-                    rabbitTemplate.convertAndSend(
-                            //交换机名
-                            ExchangeConstant.PROMISE_MESSAGE_EXCHANGE_NAME,
-                            //队列名
-                            RoutingKeyConstant.PROMISE_MESSAGE_CHECK_QUEUE_ROUTING_KEY,
-                            //消息体
-                            message.getBody(),
-                            //消息ID
-                            new CorrelationData(correlationId));
-                }
-            } catch (Exception e) {
+            //业务处理结果判断
+            if (!bizProcess(message)) {
                 //业务处理失败, 删除幂等性标识
-                log.error(RabbitLogConstant.CONSUMER_ERROR, e);
                 redisTemplate.delete("rabbit:unique:" + correlationId);
+            } else {
+                //业务处理成功
+                //发送到检查交换机
+                log.info(RabbitLogConstant.SEND_TO_CHECK_EXCHANGE, correlationId);
+                rabbitTemplate.convertAndSend(
+                        //交换机名
+                        ExchangeConstant.PROMISE_MESSAGE_EXCHANGE_NAME,
+                        //队列名
+                        RoutingKeyConstant.PROMISE_MESSAGE_CHECK_QUEUE_ROUTING_KEY,
+                        //消息体
+                        message.getBody(),
+                        //消息ID
+                        new CorrelationData(correlationId));
             }
         } finally {
             //此处使用手动 ack的目的仅仅是为了限流

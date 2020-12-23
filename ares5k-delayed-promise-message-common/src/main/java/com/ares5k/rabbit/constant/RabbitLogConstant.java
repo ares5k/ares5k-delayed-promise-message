@@ -35,7 +35,7 @@ public class RabbitLogConstant {
     /**
      * 幂等性
      */
-    public static final String REDIS_PROCESSED = "消息已经被处理过, 不能重复处理, 消息ID; {}";
+    public static final String REDIS_PROCESSED = "消息已经被处理过, 不能重复处理, 消息ID: {}";
 
     /**
      * 收到队列投递的消息
@@ -43,9 +43,9 @@ public class RabbitLogConstant {
     public static final String RABBIT_QUEUE_RECEIVED = "收到Rabbit Broker投递消息: 交换机:{}, 队列: {}, 消息ID: {}, 消息在队列中的位置: {}";
 
     /**
-     * Rabbit Broker消息发送到交换机成功格式
+     * 已记录消费成功的消息状态
      */
-    public static final String RABBIT_MQ_CONFIRM_ACK = "消息发送到rabbit broker交换机成功, 消息ID: {}";
+    public static final String RABBIT_CONSUME_SUCCESS = "已记录消费成功的消息状态, 消息ID: {}";
 
     /**
      * Rabbit Broker消息发送到交换机失败格式
@@ -56,6 +56,12 @@ public class RabbitLogConstant {
      * 发送消息到延迟队列格式
      */
     public static final String RABBIT_MQ_SEND_TO_DELAY = "发送消息到延迟队列, 消息ID: {}, 延迟时间: {}ms";
+
+
+    /**
+     * 消息消费异常, 请求重试。
+     */
+    public static final String RABBIT_MQ_RETRY = "消息消费异常, 请求重试。";
 
     /**
      * 发送到业务消息队列失败, 延迟消息已经发出

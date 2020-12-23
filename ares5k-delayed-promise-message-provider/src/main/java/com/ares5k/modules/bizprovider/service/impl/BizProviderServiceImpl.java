@@ -42,6 +42,11 @@ public class BizProviderServiceImpl extends ServiceImpl<BizProviderMapper, BizPr
 
     /**
      * 添加数据
+     * <p>
+     * 为了避免发生问题时 数据库回滚，MQ不回滚的问题
+     * 发送 MQ和数据库操作不应该在同一事务内, 所以此处没用事务注解
+     * 不让方法整体成为一个事务，如果业务逻辑比较多, 建议把数据库操作的
+     * 代码抽离出去，然后单独做成一个事务
      *
      * @param provider 提供端业务表实体对象
      * @return 操作结果
@@ -49,20 +54,22 @@ public class BizProviderServiceImpl extends ServiceImpl<BizProviderMapper, BizPr
      */
     @Override
     public String addBizProvider(BizProvider provider) {
-        // mybatis-plus提供的新增数据方法, 并且会将生成主键填充到参数对象内
-        if (!super.save(provider)) {
-            //插入失败
-            return ERROR;
-        } else {
-            //插入成功后投递数据
+        //插入成功后投递数据
+        if (super.save(provider)) {
             send(MsgData.DataOperationEnum.INSERT_UPDATE, provider);
-            //操作结果
             return SUCCESS;
         }
+        //插入失败
+        return ERROR;
     }
 
     /**
      * 删除数据
+     * <p>
+     * 为了避免发生问题时 数据库回滚，MQ不回滚的问题
+     * 发送 MQ和数据库操作不应该在同一事务内, 所以此处没用事务注解
+     * 不让方法整体成为一个事务，如果业务逻辑比较多, 建议把数据库操作的
+     * 代码抽离出去，然后单独做成一个事务
      *
      * @param provider 提供端业务表实体对象
      * @return 操作结果
@@ -70,24 +77,22 @@ public class BizProviderServiceImpl extends ServiceImpl<BizProviderMapper, BizPr
      */
     @Override
     public String delBizProvider(BizProvider provider) {
-        //主键不能是空
-        if (StrUtil.isEmpty(provider.getProviderId())) {
-            return ERROR;
-        }
-        //删除数据
-        if (!super.removeById(provider.getProviderId())) {
-            //删除失败
-            return ERROR;
-        } else {
-            //投递数据
+        //删除成功后投递数据
+        if (super.removeById(provider.getProviderId())) {
             send(MsgData.DataOperationEnum.DELETE, provider);
-            //操作结果
             return SUCCESS;
         }
+        //删除失败
+        return ERROR;
     }
 
     /**
      * 修改数据
+     * <p>
+     * 为了避免发生问题时 数据库回滚，MQ不回滚的问题
+     * 发送 MQ和数据库操作不应该在同一事务内, 所以此处没用事务注解
+     * 不让方法整体成为一个事务，如果业务逻辑比较多, 建议把数据库操作的
+     * 代码抽离出去，然后单独做成一个事务
      *
      * @param provider 提供端业务表实体对象
      * @return 操作结果
@@ -95,21 +100,13 @@ public class BizProviderServiceImpl extends ServiceImpl<BizProviderMapper, BizPr
      */
     @Override
     public String changeBizProvider(BizProvider provider) {
-        //主键不能是空
-        if (StrUtil.isEmpty(provider.getProviderId())) {
-            return ERROR;
-        }
-        //修改数据
-        if (!super.updateById(provider)) {
-            //修改失败
-            return ERROR;
-        } else {
-            //投递数据
+        //修改成功后投递数据
+        if (super.updateById(provider)) {
             send(MsgData.DataOperationEnum.INSERT_UPDATE, provider);
-            //操作结果
             return SUCCESS;
         }
-
+        //修改失败
+        return ERROR;
     }
 
     /**
@@ -136,6 +133,7 @@ public class BizProviderServiceImpl extends ServiceImpl<BizProviderMapper, BizPr
      *
      * @param operation 此次数据的操作类型
      * @param provider  内容对象
+     * @author arese5k
      */
     private void send(MsgData.DataOperationEnum operation, BizProvider provider) {
         this.send(operation, provider, null);
@@ -145,8 +143,9 @@ public class BizProviderServiceImpl extends ServiceImpl<BizProviderMapper, BizPr
      * 投递消息
      *
      * @param operation 此次数据的操作类型
-     * @param msgId     消息ID
+     * @param msgId     消息ID-非重试的场合, msgId为空, 重试的场合 msg不为空
      * @param provider  内容对象
+     * @author arese5k
      */
     private void send(MsgData.DataOperationEnum operation, BizProvider provider, String msgId) {
 

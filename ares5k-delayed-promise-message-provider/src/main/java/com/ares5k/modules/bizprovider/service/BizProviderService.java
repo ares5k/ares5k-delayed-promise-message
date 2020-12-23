@@ -1,7 +1,6 @@
 package com.ares5k.modules.bizprovider.service;
 
 import com.ares5k.entity.provider.BizProvider;
-import com.ares5k.rabbit.data.MsgData;
 
 /**
  * RabbitMQ 可靠性消息投递 - 延迟队列
@@ -45,7 +44,7 @@ public interface BizProviderService {
     /**
      * 消息重发
      *
-     * @param msgId 消息ID
+     * @param msgId      消息ID
      * @param providerId 消息提供端业务表ID
      * @author arese5k
      */

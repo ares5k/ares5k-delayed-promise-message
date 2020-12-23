@@ -5,14 +5,17 @@ import cn.hutool.core.util.StrUtil;
 import com.ares5k.entity.check.MessageDeliver;
 import com.ares5k.modules.sync.mapper.MessageDeliverMapper;
 import com.ares5k.modules.sync.service.MessageDeliverService;
+import com.ares5k.rabbit.constant.RabbitLogConstant;
 import com.ares5k.rabbit.constant.RoutingKeyConstant;
 import com.ares5k.rabbit.data.MsgData;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
@@ -26,6 +29,7 @@ import java.io.IOException;
  * qq: 16891544
  * email: 16891544@qq.com
  */
+@Slf4j
 @Service
 public class MessageDeliverServiceImpl extends ServiceImpl<MessageDeliverMapper, MessageDeliver> implements MessageDeliverService {
 
@@ -46,11 +50,11 @@ public class MessageDeliverServiceImpl extends ServiceImpl<MessageDeliverMapper,
      *
      * @param id   消息ID
      * @param data 数据
-     * @return 操作结果
      * @author ares5k
      */
     @Override
-    public boolean okHandle(String id, String data) {
+    @Transactional(rollbackFor = Throwable.class)
+    public void consumerHandleSuccess(String id, String data) {
 
         //查询是否存在
         MessageDeliver deliver;
@@ -60,16 +64,21 @@ public class MessageDeliverServiceImpl extends ServiceImpl<MessageDeliverMapper,
             //更新
             deliver.setContent(data);
             deliver.setMsgStatus(MessageDeliver.MessageStatus.CONSUMER_OK.ordinal());
-            return super.updateById(deliver);
+            super.updateById(deliver);
 
         } else {
             //新增
-            return super.save(setMessageDeliver(id, data, MessageDeliver.MessageStatus.CONSUMER_OK.ordinal(), 0));
+            super.save(setMessageDeliver(id, data, MessageDeliver.MessageStatus.CONSUMER_OK.ordinal(), 0));
         }
     }
 
     /**
      * 验证是否成功同步
+     * <p>
+     * 为了避免发生问题时 数据库回滚，MQ不回滚的问题
+     * 发送 MQ和数据库操作不应该在同一事务内, 所以此处没用事务注解
+     * 不让方法整体成为一个事务，如果业务逻辑比较多, 建议把数据库操作的
+     * 代码抽离出去，然后单独做成一个事务
      *
      * @param id   消息ID
      * @param data 数据
@@ -78,7 +87,7 @@ public class MessageDeliverServiceImpl extends ServiceImpl<MessageDeliverMapper,
      */
     @SuppressWarnings("all")
     @Override
-    public boolean delayCheckHandle(String id, String data) throws IOException {
+    public void delayCheckHandle(String id, String data) throws IOException {
 
         //是否重试
         boolean retry = false;
@@ -91,7 +100,7 @@ public class MessageDeliverServiceImpl extends ServiceImpl<MessageDeliverMapper,
                 && deliver.getMsgStatus() == MessageDeliver.MessageStatus.CONSUMER_OK.ordinal()) {
             //删除消息
             super.removeById(id);
-            return true;
+            return;
         }
         //消费端处理失败的消息
         if (ObjectUtil.isNotEmpty(deliver) && deliver.getMsgStatus() != MessageDeliver.MessageStatus.CONSUMER_OK.ordinal()) {
@@ -111,11 +120,10 @@ public class MessageDeliverServiceImpl extends ServiceImpl<MessageDeliverMapper,
         //需要重试
         if (retry) {
             //发送 get请求
+            log.warn(RabbitLogConstant.RABBIT_MQ_RETRY);
             MsgData msgData = objectMapper.readValue(data, MsgData.class);
             httpClient.execute(new HttpGet(String.format(RETRY_URL, new String[]{id, msgData.getBizProvider().getProviderId()})));
         }
-        //正常返回
-        return true;
     }
 
     /**

@@ -67,8 +67,6 @@ public class PromiseMsgConfirmCallback implements RabbitTemplate.ConfirmCallback
 
         //判断发送到交换机的结果
         if (ack) {
-            //发送到交换机成功
-            log.info(RabbitLogConstant.RABBIT_MQ_CONFIRM_ACK, correlationId);
             //发送消息到延迟队列
             sendDelayMessage(correlationData);
 
@@ -79,14 +77,11 @@ public class PromiseMsgConfirmCallback implements RabbitTemplate.ConfirmCallback
                 //从消息关联中拿到消息对象
                 if (correlationData.getReturnedMessage() != null) {
                     //json转换
-                    objectMapper.readValue(correlationData.getReturnedMessage().getBody(), MsgData.class);
+                    BizProvider bizProvider = objectMapper.readValue(correlationData.getReturnedMessage().getBody(), MsgData.class).getBizProvider();
 
                     //更新数据状态
                     log.warn(RabbitLogConstant.SYNC_FIND_EXCHANGE_ERROR);
-                    bizProviderMapper.updateById(
-                            new BizProvider()
-                                    .setProviderId(correlationId)
-                                    .setSyncStatus(BizProvider.SendSyncEnum.FIND_EXCHANGE_ERROR.ordinal()));
+                    bizProviderMapper.updateById(bizProvider.setSyncStatus(BizProvider.SendSyncEnum.FIND_EXCHANGE_ERROR.ordinal()));
                 }
             } catch (IOException e) {
                 log.error(RabbitLogConstant.JSON_ERROR, e);
@@ -126,7 +121,6 @@ public class PromiseMsgConfirmCallback implements RabbitTemplate.ConfirmCallback
             } catch (IOException e) {
                 log.error(RabbitLogConstant.JSON_ERROR, e);
             }
-
         }
     }
 }
